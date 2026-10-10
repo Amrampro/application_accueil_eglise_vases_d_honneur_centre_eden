@@ -21,11 +21,11 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      # 1. Recuperer le projet
+      # 1. Recuperer le code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Installer Node.js 22
+      # 2. Installer Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,22 +33,23 @@ jobs:
           cache: npm
           cache-dependency-path: webapp/package-lock.json
 
-      # 3. Installer les dependances React
+      # 3. Installer les dependances frontend
       - name: Install frontend dependencies
         working-directory: ./webapp
         run: npm ci
 
-      # 4. Compiler React/Vite
+      # 4. Compiler React avec webapp/.env
       - name: Build React application
         working-directory: ./webapp
         run: |
           test -f .env || {
-            echo "Erreur : webapp/.env introuvable"
+            echo "ERROR: webapp/.env introuvable"
             exit 1
           }
+
           npm run build
 
-      # 5. Preparer les fichiers de deploiement
+      # 5. Preparer API + frontend
       - name: Prepare deployment
         run: |
           mkdir -p deploy/dist
@@ -71,7 +72,7 @@ jobs:
           test -f deploy/dist/index.html
           test -f deploy/database/migrate.js
 
-      # 6. Configurer SSH avec verification de l'hote
+      # 6. Configurer SSH
       - name: Setup SSH
         env:
           SSH_KEY: ${{ secrets.PLESK_SSH_KEY }}
@@ -86,7 +87,11 @@ jobs:
           printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
-      # 7. Verifier la connexion Plesk
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+
+          echo "SSH configuration prepared"
+
+      # 7. Diagnostic detaille de connexion SSH
       - name: Verify Plesk connection
         env:
           HOST: ${{ secrets.PLESK_HOST }}
@@ -94,13 +99,19 @@ jobs:
           PORT: ${{ secrets.PLESK_PORT }}
           REMOTE_PATH: ${{ secrets.PLESK_PATH }}
         run: |
-          ssh -o BatchMode=yes \
+          echo "Testing SSH connection..."
+
+          ssh -vvv \
+            -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=20 \
             -p "$PORT" \
             "$USER@$HOST" \
-            "test -d '$REMOTE_PATH' && test -f '$REMOTE_PATH/.env'"
+            "test -d '$REMOTE_PATH' && test -f '$REMOTE_PATH/.env' && echo 'Plesk connection OK'"
 
-      # 8. Envoyer API et frontend sur Plesk
+      # 8. Transferer les fichiers
       - name: Upload application to Plesk
         env:
           HOST: ${{ secrets.PLESK_HOST }}
@@ -115,11 +126,11 @@ jobs:
             --exclude='uploads/' \
             --exclude='tmp/' \
             --exclude='backup_*.zip' \
-            -e "ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -p $PORT" \
+            -e "ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -p $PORT" \
             deploy/ \
             "$USER@$HOST:$REMOTE_PATH/"
 
-      # 9. Installer les dependances API
+      # 9. Installer les dependances backend
       - name: Install backend dependencies
         env:
           HOST: ${{ secrets.PLESK_HOST }}
@@ -127,7 +138,11 @@ jobs:
           PORT: ${{ secrets.PLESK_PORT }}
           REMOTE_PATH: ${{ secrets.PLESK_PATH }}
         run: |
-          ssh -o BatchMode=yes -p "$PORT" \
+          ssh \
+            -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -p "$PORT" \
             "$USER@$HOST" \
             "set -e; cd '$REMOTE_PATH'; npm ci --omit=dev"
 
@@ -139,11 +154,15 @@ jobs:
           PORT: ${{ secrets.PLESK_PORT }}
           REMOTE_PATH: ${{ secrets.PLESK_PATH }}
         run: |
-          ssh -o BatchMode=yes -p "$PORT" \
+          ssh \
+            -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -p "$PORT" \
             "$USER@$HOST" \
             "set -e; cd '$REMOTE_PATH'; npm run db:migrate"
 
-      # 11. Redemarrer Node.js via Passenger
+      # 11. Redemarrer Node.js
       - name: Restart Node.js
         env:
           HOST: ${{ secrets.PLESK_HOST }}
@@ -151,15 +170,19 @@ jobs:
           PORT: ${{ secrets.PLESK_PORT }}
           REMOTE_PATH: ${{ secrets.PLESK_PATH }}
         run: |
-          ssh -o BatchMode=yes -p "$PORT" \
+          ssh \
+            -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -p "$PORT" \
             "$USER@$HOST" \
             "set -e; cd '$REMOTE_PATH'; mkdir -p tmp; touch tmp/restart.txt"
 
-      # 12. Confirmer le deploiement
+      # 12. Confirmation
       - name: Deployment completed
         run: |
           echo "Deployment completed successfully"
-          echo "API: deployed"
-          echo "Frontend: built and deployed"
-          echo "Database migrations: completed"
-          echo "Node.js: restart requested"
+          echo "API deployed"
+          echo "React frontend deployed"
+          echo "MySQL migrations completed"
+          echo "Node.js restart requested"
