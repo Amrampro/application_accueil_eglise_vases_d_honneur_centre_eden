@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  Church,
   Users,
   Network,
   BookOpen,
@@ -24,7 +23,20 @@ import { Notice } from "./Shared";
 import { mediaUrl } from "./MediaUpload";
 
 const choices = [
-  ["churches", "Nos églises", "Découvrir notre famille", "/eglises", Church],
+  [
+    "location",
+    "Nous localiser",
+    "Retrouver notre église sur la carte",
+    "/nous-localiser",
+    MapPin,
+  ],
+  [
+    "donation",
+    "Donner à mon église",
+    "Soutenir l’œuvre et la vie de l’église",
+    "/donner",
+    HeartHandshake,
+  ],
   [
     "ministries",
     "Nos ministères",
@@ -63,7 +75,7 @@ const choices = [
     View,
   ],
 ];
-export function KioskHome() {
+export function KioskHome({ data }) {
   return (
     <section className="kiosk-home">
       <div className="kiosk-intro">
@@ -72,10 +84,11 @@ export function KioskHome() {
             BIENVENUE DANS VOTRE FAMILLE
           </span>
           <h1 className="heading-motion">
-            Que souhaitez-vous{" "}
-            <span className="discover-motion">découvrir ?</span>
+            {data.settings.church_name || "Église Vases d'Honneur Centre Éden"}
           </h1>
-          <p className="hint-motion">Touchez une case pour commencer.</p>
+          <p className="hint-motion">
+            Que souhaitez-vous découvrir ? Touchez une case pour commencer.
+          </p>
         </div>
         <div className="touch-instruction">
           <span className="touch-circle">
@@ -90,7 +103,15 @@ export function KioskHome() {
         {choices.map(([key, title, desc, path, Icon], index) => (
           <Link className={"kiosk-tile tile-" + key} key={key} to={path}>
             <img
-              src={"/images/" + key + ".jpg"}
+              src={
+                "/images/" +
+                (key === "location"
+                  ? "churches"
+                  : key === "donation"
+                    ? "appointment"
+                    : key) +
+                ".jpg"
+              }
               alt=""
               loading={index < 4 ? "eager" : "lazy"}
             />
@@ -116,6 +137,101 @@ export function KioskHome() {
         </span>
         <span>Choisissez • Découvrez • Revenez à l’accueil</span>
       </div>
+    </section>
+  );
+}
+export function Location({ data }) {
+  const s = data.settings;
+  return (
+    <section className="section kiosk-section">
+      <div className="page-heading">
+        <span className="eyebrow">REJOIGNEZ-NOUS</span>
+        <h1>Nous localiser</h1>
+        <p>{s.church_name}</p>
+      </div>
+      {s.address && (
+        <p className="pre-line">
+          <MapPin size={18} /> {s.address}
+        </p>
+      )}
+      {s.map_embed_url && (
+        <iframe
+          className="church-map"
+          title="Localisation de l’église sur Google Maps"
+          src={s.map_embed_url}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          allowFullScreen
+        />
+      )}
+      {s.map_url ? (
+        <a
+          className="button"
+          href={s.map_url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Ouvrir dans Google Maps <ArrowRight size={18} />
+        </a>
+      ) : (
+        <Notice>
+          La localisation sera bientôt disponible. Contactez le secrétariat pour
+          nous rejoindre.
+        </Notice>
+      )}
+    </section>
+  );
+}
+export function Donation({ data }) {
+  const s = data.settings;
+  return (
+    <section className="section kiosk-section donation-page">
+      <div className="page-heading">
+        <span className="eyebrow">ENSEMBLE, SOUTENONS L’ŒUVRE</span>
+        <h1>Donner à mon église</h1>
+        <p>Merci pour votre générosité.</p>
+      </div>
+      {s.donation_url && (
+        <div className="donation-link">
+          <h2>Donner avec le lien</h2>
+          <a
+            className="button"
+            href={s.donation_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Faire un don <ArrowRight size={18} />
+          </a>
+          <a
+            className="donation-url"
+            href={s.donation_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {s.donation_url}
+          </a>
+        </div>
+      )}
+      {s.donation_url && s.donation_qr_image && (
+        <div className="donation-or">OU</div>
+      )}
+      {s.donation_qr_image && (
+        <div>
+          <h2>Scannez le QR code</h2>
+          <p>Utilisez l’appareil photo de votre téléphone pour donner.</p>
+          <img
+            className="donation-qr"
+            src={mediaUrl(s.donation_qr_image)}
+            alt="QR code pour donner à mon église"
+          />
+        </div>
+      )}
+      {!s.donation_url && !s.donation_qr_image && (
+        <Notice>
+          Les moyens de don seront bientôt disponibles. Notre secrétariat peut
+          vous renseigner.
+        </Notice>
+      )}
     </section>
   );
 }

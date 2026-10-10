@@ -1,6 +1,11 @@
 import { Router, raw } from "express";
 import { uploadImage } from "../services/media.js";
 import { validImageUrl } from "../services/content.js";
+import {
+  validHttpsUrl,
+  validMapUrl,
+  resolveMapEmbed,
+} from "../services/location.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { rateLimit } from "express-rate-limit";
@@ -158,7 +163,54 @@ router.put(
       "address",
       "service_times",
       "hero_image",
+      "map_url",
+      "map_embed_url",
+      "donation_url",
+      "donation_qr_image",
     ];
+    for (const key of [
+      "map_url",
+      "map_embed_url",
+      "donation_url",
+      "donation_qr_image",
+    ])
+      req.body[key] ??= "";
+    if (req.body.map_url && !validMapUrl(req.body.map_url))
+      return res
+        .status(400)
+        .json({ message: "Utilisez un lien HTTPS Google Maps." });
+    if (req.body.donation_url && !validHttpsUrl(req.body.donation_url))
+      return res
+        .status(400)
+        .json({ message: "Le lien de don doit utiliser une URL HTTPS." });
+    if (
+      req.body.donation_qr_image &&
+      !validImageUrl(req.body.donation_qr_image)
+    )
+      return res
+        .status(400)
+        .json({ message: "Importez le QR code ou utilisez une image HTTPS." });
+    if (
+      req.body.map_embed_url &&
+      (!validMapUrl(req.body.map_embed_url) ||
+        !(
+          new URL(req.body.map_embed_url).pathname.startsWith("/maps/embed") ||
+          new URL(req.body.map_embed_url).searchParams.get("output") === "embed"
+        ))
+    )
+      return res
+        .status(400)
+        .json({
+          message:
+            "Utilisez l’URL Google Maps /maps/embed de la carte intégrée.",
+        });
+    if (req.body.map_url && !req.body.map_embed_url) {
+      try {
+        req.body.map_embed_url = await resolveMapEmbed(req.body.map_url);
+      } catch {
+        return res.status(400).json({ message: "Impossible de préparer la carte à partir de ce lien. Dans Google Maps, choisissez Partager > Intégrer une carte, puis copiez l’adresse src dans le champ URL de carte intégrée." });
+      }
+    }
     const values = fields.map((k) => req.body[k]);
     if (
       values.some((v) => typeof v !== "string" || v.length > 4000) ||

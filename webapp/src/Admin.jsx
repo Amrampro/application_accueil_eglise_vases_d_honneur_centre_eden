@@ -40,6 +40,11 @@ const fieldLabels = {
   address: "Adresse",
   service_times: "Horaires des cultes",
   hero_image: "URL de l’image d’accueil (HTTPS)",
+  map_url: "Lien Google Maps de l’église",
+  map_embed_url:
+    "URL de carte intégrée (facultatif, si le lien ne peut pas être résolu)",
+  donation_url: "Lien pour donner à mon église (HTTPS)",
+  donation_qr_image: "QR code pour les dons",
 };
 const fields = {
   churches: [
@@ -120,6 +125,10 @@ const fields = {
     "address",
     "service_times",
     "hero_image",
+    "map_url",
+    "map_embed_url",
+    "donation_url",
+    "donation_qr_image",
   ],
 };
 const types = {
@@ -215,7 +224,9 @@ function Editor({ resource, item, ministries, tours, onSaved }) {
                         </option>
                       ))}
                     </select>
-                  ) : ["image_url", "hero_image"].includes(key) ? (
+                  ) : ["image_url", "hero_image", "donation_qr_image"].includes(
+                      key,
+                    ) ? (
                     <MediaUpload
                       name={key}
                       value={value}
@@ -253,6 +264,14 @@ function Editor({ resource, item, ministries, tours, onSaved }) {
                     <input
                       name={key}
                       defaultValue={value}
+                      onChange={
+                        key === "map_url"
+                          ? (e) => {
+                              e.currentTarget.form.elements.map_embed_url.value =
+                                "";
+                            }
+                          : undefined
+                      }
                       type={
                         key === "starts_at"
                           ? "datetime-local"

@@ -29,7 +29,7 @@ import {
 import { api } from "./api";
 import Admin from "./Admin";
 import { Modal, Notice } from "./Shared";
-import { KioskHome, Churches, Tours } from "./Kiosk";
+import { KioskHome, Churches, Tours, Location, Donation } from "./Kiosk";
 import { mediaUrl } from "./MediaUpload";
 import { House, Maximize } from "lucide-react";
 
@@ -905,6 +905,8 @@ function PublicApp() {
         ) : (
           <Routes>
             <Route index element={<KioskHome data={data} />} />
+            <Route path="nous-localiser" element={<Location data={data} />} />
+            <Route path="donner" element={<Donation data={data} />} />
             <Route path="eglises" element={<Churches data={data} />} />
             <Route path="visiter" element={<Tours data={data} />} />
             <Route path="decouvrir" element={<Discover data={data} />} />

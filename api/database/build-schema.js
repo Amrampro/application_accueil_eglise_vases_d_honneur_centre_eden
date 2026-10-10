@@ -34,7 +34,7 @@ let sql = `-- Vase d’honneur — installation dans une base vide MySQL 8 / Mar
 -- Ce fichier ne supprime aucune table et ne répare pas un stockage corrompu.
 -- Aucun compte administrateur par défaut. Utiliser npm run create-admin.
 CREATE TABLE IF NOT EXISTS admins (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,email VARCHAR(190) NOT NULL UNIQUE,name VARCHAR(190) NOT NULL,password_hash VARCHAR(255) NOT NULL,token_version INT NOT NULL DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-CREATE TABLE IF NOT EXISTS settings (id INT PRIMARY KEY,church_name VARCHAR(255) NOT NULL,tagline TEXT NOT NULL,welcome_text TEXT NOT NULL,address TEXT NOT NULL,service_times TEXT NOT NULL,hero_image TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS settings (id INT PRIMARY KEY,church_name VARCHAR(255) NOT NULL,tagline TEXT NOT NULL,welcome_text TEXT NOT NULL,address TEXT NOT NULL,service_times TEXT NOT NULL,hero_image TEXT NOT NULL,map_url TEXT NOT NULL DEFAULT '',map_embed_url TEXT NOT NULL DEFAULT '',donation_url TEXT NOT NULL DEFAULT '',donation_qr_image TEXT NOT NULL DEFAULT '');
 `;
 const common =
   "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,name VARCHAR(255) NOT NULL,description TEXT,published BOOLEAN NOT NULL DEFAULT 1,sort_order INT NOT NULL DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
@@ -55,7 +55,7 @@ for (const [table, extra] of Object.entries({
 }))
   sql += `CREATE TABLE IF NOT EXISTS ${table} (${common},${extra});\n`;
 sql += `CREATE TABLE IF NOT EXISTS requests (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,type ENUM('appointment','enrollment','prayer','testimony') NOT NULL,first_name VARCHAR(255) NOT NULL,last_name VARCHAR(255) NOT NULL,sex VARCHAR(50),need_type VARCHAR(100),reason TEXT,phone VARCHAR(100),email VARCHAR(255),preferred_date DATE,school_id INT UNSIGNED,status ENUM('new','in_progress','done') NOT NULL DEFAULT 'new',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE RESTRICT,INDEX (status,created_at));\n`;
-sql += `INSERT IGNORE INTO settings VALUES (1,'Vase d’honneur','Une église. Une famille. Une place pour vous.','Bienvenue au Centre Eden. Découvrez notre famille, grandissez dans la foi et trouvez votre place parmi nous.','','','');\n`;
+sql += `INSERT IGNORE INTO settings (id,church_name,tagline,welcome_text,address,service_times,hero_image) VALUES (1,'Église Vases d''Honneur Centre Éden','Une église. Une famille. Une place pour vous.','Bienvenue au Centre Eden. Découvrez notre famille, grandissez dans la foi et trouvez votre place parmi nous.','','','');\n`;
 sql +=
   "INSERT IGNORE INTO churches (id,name,description,sort_order) VALUES (1,'Vases d’honneur · Centre Eden','Bienvenue dans notre famille. Découvrez nos ministères et nos parcours d’accompagnement.',0);\n";
 let dept = 0;
