@@ -1,16 +1,32 @@
+
+# Dépendances
 node_modules/
+
+# Builds
 dist/
-.env
+
+# Variables d'environnement
+api/.env
+api/.env.*
+webapp/.env.local
+webapp/.env.*.local
+
+# Logs
 *.log
 *.local
+
+# Rapports de tests
 playwright-report/
 test-results/
-
 .test-mysql/
+
+# Cache
 .npm-cache/
 
+# Fichiers utilisateurs
 api/uploads/
-
-
 api/tests/*.local.jpg
 
+# IDE
+.idea/
+.vscode/

@@ -1,0 +1,165 @@
+
+name: Deploy Eglise Vase to Plesk
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plesk-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and Deploy to Plesk
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # 1. Recuperer le projet
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Installer Node.js 22
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+
+      # 3. Installer les dependances React
+      - name: Install frontend dependencies
+        working-directory: ./webapp
+        run: npm ci
+
+      # 4. Compiler React/Vite
+      - name: Build React application
+        working-directory: ./webapp
+        run: |
+          test -f .env || {
+            echo "Erreur : webapp/.env introuvable"
+            exit 1
+          }
+          npm run build
+
+      # 5. Preparer les fichiers de deploiement
+      - name: Prepare deployment
+        run: |
+          mkdir -p deploy/dist
+
+          rsync -a api/ deploy/ \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='node_modules/' \
+            --exclude='uploads/' \
+            --exclude='tmp/' \
+            --exclude='dist/' \
+            --exclude='tests/' \
+            --exclude='.git/'
+
+          rsync -a webapp/dist/ deploy/dist/
+
+          test -f deploy/server.js
+          test -f deploy/package.json
+          test -f deploy/package-lock.json
+          test -f deploy/dist/index.html
+          test -f deploy/database/migrate.js
+
+      # 6. Configurer SSH avec verification de l'hote
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.PLESK_SSH_KEY }}
+          SSH_HOST_KEY: ${{ secrets.PLESK_SSH_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      # 7. Verifier la connexion Plesk
+      - name: Verify Plesk connection
+        env:
+          HOST: ${{ secrets.PLESK_HOST }}
+          USER: ${{ secrets.PLESK_USER }}
+          PORT: ${{ secrets.PLESK_PORT }}
+          REMOTE_PATH: ${{ secrets.PLESK_PATH }}
+        run: |
+          ssh -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -p "$PORT" \
+            "$USER@$HOST" \
+            "test -d '$REMOTE_PATH' && test -f '$REMOTE_PATH/.env'"
+
+      # 8. Envoyer API et frontend sur Plesk
+      - name: Upload application to Plesk
+        env:
+          HOST: ${{ secrets.PLESK_HOST }}
+          USER: ${{ secrets.PLESK_USER }}
+          PORT: ${{ secrets.PLESK_PORT }}
+          REMOTE_PATH: ${{ secrets.PLESK_PATH }}
+        run: |
+          rsync -az \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='node_modules/' \
+            --exclude='uploads/' \
+            --exclude='tmp/' \
+            --exclude='backup_*.zip' \
+            -e "ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -p $PORT" \
+            deploy/ \
+            "$USER@$HOST:$REMOTE_PATH/"
+
+      # 9. Installer les dependances API
+      - name: Install backend dependencies
+        env:
+          HOST: ${{ secrets.PLESK_HOST }}
+          USER: ${{ secrets.PLESK_USER }}
+          PORT: ${{ secrets.PLESK_PORT }}
+          REMOTE_PATH: ${{ secrets.PLESK_PATH }}
+        run: |
+          ssh -o BatchMode=yes -p "$PORT" \
+            "$USER@$HOST" \
+            "set -e; cd '$REMOTE_PATH'; npm ci --omit=dev"
+
+      # 10. Executer les migrations MySQL
+      - name: Run database migrations
+        env:
+          HOST: ${{ secrets.PLESK_HOST }}
+          USER: ${{ secrets.PLESK_USER }}
+          PORT: ${{ secrets.PLESK_PORT }}
+          REMOTE_PATH: ${{ secrets.PLESK_PATH }}
+        run: |
+          ssh -o BatchMode=yes -p "$PORT" \
+            "$USER@$HOST" \
+            "set -e; cd '$REMOTE_PATH'; npm run db:migrate"
+
+      # 11. Redemarrer Node.js via Passenger
+      - name: Restart Node.js
+        env:
+          HOST: ${{ secrets.PLESK_HOST }}
+          USER: ${{ secrets.PLESK_USER }}
+          PORT: ${{ secrets.PLESK_PORT }}
+          REMOTE_PATH: ${{ secrets.PLESK_PATH }}
+        run: |
+          ssh -o BatchMode=yes -p "$PORT" \
+            "$USER@$HOST" \
+            "set -e; cd '$REMOTE_PATH'; mkdir -p tmp; touch tmp/restart.txt"
+
+      # 12. Confirmer le deploiement
+      - name: Deployment completed
+        run: |
+          echo "Deployment completed successfully"
+          echo "API: deployed"
+          echo "Frontend: built and deployed"
+          echo "Database migrations: completed"
+          echo "Node.js: restart requested"
