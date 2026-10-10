@@ -21,11 +21,11 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      # 1. Recuperer le code
+      # 1. Recuperer le code GitHub
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Installer Node.js
+      # 2. Installer Node.js 22
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,12 +33,12 @@ jobs:
           cache: npm
           cache-dependency-path: webapp/package-lock.json
 
-      # 3. Installer les dependances frontend
+      # 3. Installer les dependances React
       - name: Install frontend dependencies
         working-directory: ./webapp
         run: npm ci
 
-      # 4. Compiler React avec webapp/.env
+      # 4. Compiler React avec les variables .env
       - name: Build React application
         working-directory: ./webapp
         run: |
@@ -49,7 +49,7 @@ jobs:
 
           npm run build
 
-      # 5. Preparer API + frontend
+      # 5. Preparer les fichiers API et frontend
       - name: Prepare deployment
         run: |
           mkdir -p deploy/dist
@@ -89,9 +89,7 @@ jobs:
 
           ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
 
-          echo "SSH configuration prepared"
-
-      # 7. Diagnostic detaille de connexion SSH
+      # 7. Verifier la connexion Plesk
       - name: Verify Plesk connection
         env:
           HOST: ${{ secrets.PLESK_HOST }}
@@ -99,9 +97,7 @@ jobs:
           PORT: ${{ secrets.PLESK_PORT }}
           REMOTE_PATH: ${{ secrets.PLESK_PATH }}
         run: |
-          echo "Testing SSH connection..."
-
-          ssh -vvv \
+          ssh \
             -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
             -o BatchMode=yes \
@@ -111,7 +107,7 @@ jobs:
             "$USER@$HOST" \
             "test -d '$REMOTE_PATH' && test -f '$REMOTE_PATH/.env' && echo 'Plesk connection OK'"
 
-      # 8. Transferer les fichiers
+      # 8. Transferer API + build React sur Plesk
       - name: Upload application to Plesk
         env:
           HOST: ${{ secrets.PLESK_HOST }}
@@ -130,7 +126,7 @@ jobs:
             deploy/ \
             "$USER@$HOST:$REMOTE_PATH/"
 
-      # 9. Installer les dependances backend
+      # 9. Installer les dependances backend sur Plesk
       - name: Install backend dependencies
         env:
           HOST: ${{ secrets.PLESK_HOST }}
@@ -142,9 +138,15 @@ jobs:
             -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
             -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
             -p "$PORT" \
             "$USER@$HOST" \
-            "set -e; cd '$REMOTE_PATH'; npm ci --omit=dev"
+            "set -e; \
+             export PATH=/opt/plesk/node/22/bin:\$PATH; \
+             cd '$REMOTE_PATH'; \
+             node --version; \
+             npm --version; \
+             npm ci --omit=dev"
 
       # 10. Executer les migrations MySQL
       - name: Run database migrations
@@ -158,11 +160,15 @@ jobs:
             -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
             -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
             -p "$PORT" \
             "$USER@$HOST" \
-            "set -e; cd '$REMOTE_PATH'; npm run db:migrate"
+            "set -e; \
+             export PATH=/opt/plesk/node/22/bin:\$PATH; \
+             cd '$REMOTE_PATH'; \
+             npm run db:migrate"
 
-      # 11. Redemarrer Node.js
+      # 11. Redemarrer Node.js via Plesk
       - name: Restart Node.js
         env:
           HOST: ${{ secrets.PLESK_HOST }}
@@ -174,15 +180,21 @@ jobs:
             -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
             -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
             -p "$PORT" \
             "$USER@$HOST" \
-            "set -e; cd '$REMOTE_PATH'; mkdir -p tmp; touch tmp/restart.txt"
+            "set -e; \
+             cd '$REMOTE_PATH'; \
+             mkdir -p tmp; \
+             touch tmp/restart.txt"
 
-      # 12. Confirmation
+      # 12. Confirmation du deploiement
       - name: Deployment completed
         run: |
+          echo "=================================="
           echo "Deployment completed successfully"
-          echo "API deployed"
-          echo "React frontend deployed"
-          echo "MySQL migrations completed"
-          echo "Node.js restart requested"
+          echo "=================================="
+          echo "API: deployed"
+          echo "React: built and deployed"
+          echo "MySQL: migrations completed"
+          echo "Node.js: restart requested"
