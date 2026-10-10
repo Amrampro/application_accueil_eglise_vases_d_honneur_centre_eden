@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+*.log
+*.local
+playwright-report/
+test-results/
+
+.test-mysql/
+.npm-cache/
+
+api/uploads/
+
+
+api/tests/*.local.jpg
+

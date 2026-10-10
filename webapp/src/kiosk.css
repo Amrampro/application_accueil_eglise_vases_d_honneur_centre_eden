@@ -1,0 +1,1390 @@
+:root {
+  --plum: #006c65;
+  --gold: #d3b31e;
+  --muted: #64766f;
+  --line: #dfe7e1;
+  background: #f6f8f5;
+  color: #142d27;
+}
+body {
+  overscroll-behavior-y: none;
+}
+.button {
+  font-size: 16px;
+  min-height: 56px;
+  border-radius: 12px;
+}
+.text-link {
+  font-size: 15px;
+  min-height: 48px;
+}
+.kiosk-header {
+  height: 92px;
+  background: #080e0d;
+  color: white;
+  padding: 12px 4%;
+  border: 0;
+  position: sticky;
+  top: 0;
+  display: flex;
+  gap: 25px;
+  z-index: 40;
+  backdrop-filter: none;
+}
+.kiosk-logo {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex-shrink: 0;
+}
+.kiosk-logo img {
+  width: 160px;
+  height: 72px;
+  object-fit: contain;
+}
+.kiosk-header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-right: auto;
+  border-left: 1px solid #ffffff25;
+  padding-left: 25px;
+}
+.kiosk-header-title > span {
+  font-size: 12px;
+  letter-spacing: 0.17em;
+  color: #d4b621;
+  font-weight: 700;
+}
+.kiosk-header-title small {
+  font-size: 12px;
+  color: #a1b6ac;
+}
+.kiosk-header-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.kiosk-home-button {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: #d3b31e;
+  color: #112d24;
+  padding: 15px 25px;
+  min-height: 56px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.kiosk-fullscreen {
+  background: #ffffff0b;
+  border: 1px solid #ffffff30;
+  border-radius: 12px;
+  min-width: 52px;
+  min-height: 52px;
+  display: grid;
+  place-items: center;
+  color: white;
+}
+.kiosk-home {
+  padding: 30px 4% 18px;
+  max-width: 1800px;
+  margin: auto;
+  min-height: calc(100dvh - 144px);
+}
+.kiosk-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+.kiosk-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #007d70;
+  font-weight: 800;
+  display: block;
+  margin-bottom: 8px;
+}
+.kiosk-intro h1 {
+  font-size: clamp(28px, 3.3vw, 48px);
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+}
+.kiosk-intro h1 span {
+  color: #007d70;
+}
+.kiosk-intro p {
+  font-size: 16px;
+  margin: 9px 0 0;
+  color: #677b71;
+}
+.touch-instruction {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.touch-instruction small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #75877e;
+  margin-top: 5px;
+}
+.touch-circle {
+  background: #e9eed9;
+  border-radius: 50%;
+  color: #7f7115;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+}
+.kiosk-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+.kiosk-tile {
+  height: clamp(185px, 18vw, 280px);
+  position: relative;
+  display: flex;
+  border-radius: 18px;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 5px 15px #12352710;
+  border: 2px solid transparent;
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+  background: #006c65;
+}
+.kiosk-tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+  transition: transform 0.6s;
+  filter: saturate(0.75);
+}
+.tile-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #062d2310 0%,
+    #061b2640 30%,
+    #062720ed 100%
+  );
+  z-index: -1;
+}
+.kiosk-tile:hover,
+.kiosk-tile:focus-visible {
+  transform: translateY(-4px);
+  border-color: #d3b31e;
+  box-shadow: 0 14px 24px #004b3920;
+}
+.kiosk-tile:active {
+  transform: scale(0.98);
+}
+.kiosk-tile:hover img {
+  transform: scale(1.05);
+}
+.tile-badge {
+  position: absolute;
+  top: 17px;
+  left: 17px;
+  min-width: 43px;
+  height: 43px;
+  border-radius: 12px;
+  background: #ffffffef;
+  color: #007769;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 14px;
+}
+.tile-appointment .tile-badge {
+  color: #c41433;
+}
+.tile-content {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 24px 20px;
+  color: white;
+  margin-top: auto;
+}
+.tile-content strong {
+  display: block;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(18px, 1.8vw, 25px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+.tile-content small {
+  display: block;
+  color: #d9e8df;
+  font-size: 11px;
+  margin-top: 7px;
+  line-height: 1.5;
+}
+.tile-arrow {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff17;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: #d9c535;
+  border: 1px solid #ffffff25;
+}
+.tile-visit {
+  grid-column: span 2;
+}
+.tile-visit .tile-shade {
+  background: linear-gradient(100deg, #003b37eb, #003b3780 65%, #003b3740);
+}
+.tile-visit .tile-content strong {
+  font-size: 28px;
+}
+.tile-visit .tile-content small {
+  font-size: 13px;
+}
+.tile-visit .tile-badge {
+  background: #d3b31e;
+  color: #052f25;
+}
+.kiosk-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 11px;
+  color: #698275;
+  padding: 24px 2px 4px;
+}
+.kiosk-footer {
+  min-height: 52px;
+  padding: 15px 4%;
+  font-size: 10px;
+  color: #7b8b82;
+  display: flex;
+  gap: 20px;
+}
+.kiosk-footer > a {
+  font-size: 11px !important;
+  color: #5d7769 !important;
+}
+.kiosk-footer > span {
+  margin-right: auto;
+}
+.kiosk-footer a:last-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-heading > .text-link {
+  display: none;
+}
+.section {
+  padding: 35px 4% 45px;
+}
+.page-heading {
+  margin-bottom: 30px;
+}
+.page-heading h1 {
+  font-size: clamp(32px, 4vw, 52px);
+}
+.page-heading p {
+  font-size: 17px;
+}
+.page-heading .eyebrow {
+  font-size: 11px;
+}
+.ministry-card {
+  min-height: 170px;
+}
+.ministry-card h3 {
+  font-size: 20px;
+}
+.ministry-card p {
+  font-size: 15px;
+}
+.department-card {
+  min-height: 100px;
+}
+.department-card h3 {
+  font-size: 20px;
+}
+.department-card small {
+  font-size: 12px;
+}
+.contact-card h3 {
+  font-size: 23px;
+}
+.contact-card p {
+  font-size: 16px;
+}
+.contact-card .text-link {
+  font-size: 17px;
+  min-height: 52px;
+}
+.contact-card {
+  padding: 30px;
+}
+.journey-card h3 {
+  font-size: 23px;
+}
+.journey-card p {
+  font-size: 16px;
+}
+.journey-card .button {
+  font-size: 15px;
+}
+.filter-bar input,
+.filter-bar select {
+  min-height: 56px;
+}
+.church-grid {
+  display: grid;
+  gap: 24px;
+}
+.church-card {
+  display: grid;
+  grid-template-columns: 42% 1fr;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.church-card > div:last-child {
+  padding: 35px;
+}
+.church-card h2 {
+  font-size: 30px;
+}
+.church-photo {
+  position: relative;
+  min-height: 300px;
+}
+.church-photo img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+.church-photo small {
+  position: absolute;
+  bottom: 12px;
+  left: 15px;
+  background: #0009;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+.pastoral-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 35px;
+  max-width: 1250px;
+}
+.pastoral-form {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 32px;
+}
+.pastoral-layout aside {
+  background: #eaf2ed;
+  padding: 22px;
+  border-radius: 18px;
+  height: max-content;
+}
+.pastoral-layout aside img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 22px;
+}
+.pastoral-layout aside h2 {
+  font-size: 25px;
+}
+.pastoral-layout aside p {
+  font-size: 15px;
+}
+.pastoral-page .form label {
+  font-size: 16px;
+  gap: 10px;
+}
+.pastoral-page input,
+.pastoral-page select {
+  min-height: 58px;
+  font-size: 17px;
+}
+.pastoral-page textarea {
+  font-size: 17px;
+}
+.pastoral-page .checkbox input {
+  min-height: 22px;
+}
+.pastoral-page .form-help {
+  font-size: 12px;
+}
+.pastoral-page .checkbox {
+  font-size: 13px;
+}
+.pastoral-success {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  padding: 50px;
+  max-width: 750px;
+  text-align: center;
+}
+.pastoral-success > svg {
+  color: #007d70;
+}
+.pastoral-success h2 {
+  margin-top: 20px;
+}
+.pastoral-success .button {
+  margin-top: 20px;
+}
+.places-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.place-card {
+  position: relative;
+  border: 0;
+  border-radius: 18px;
+  background: #043e35;
+  overflow: hidden;
+  text-align: left;
+  color: white;
+  min-height: 290px;
+  transition: transform 0.2s;
+}
+.place-card:hover {
+  transform: translateY(-4px);
+}
+.place-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+.place-pill {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  padding: 10px 14px;
+  background: #d3b31e;
+  color: #003c32;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.place-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30px 24px;
+  background: linear-gradient(transparent, #003b33);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.place-caption strong {
+  font-size: 24px;
+}
+.place-caption small {
+  color: #d1e1d8;
+}
+.place-caption svg {
+  position: absolute;
+  right: 24px;
+  bottom: 30px;
+}
+.visit-empty {
+  background: #e8f1ec;
+  border-radius: 20px;
+  text-align: center;
+  padding: 55px;
+  color: #007d70;
+}
+.visit-empty h2 {
+  margin: 25px 0 15px;
+  font-size: 28px;
+}
+.visit-empty .button {
+  margin-top: 15px;
+}
+.visit-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+  margin: 25px 0;
+}
+.visit-heading h1 {
+  font-size: 36px;
+  margin-top: 8px;
+}
+.visit-heading p {
+  max-width: 440px;
+}
+.panorama-shell {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  height: clamp(350px, 58dvh, 750px);
+  background: #042e28;
+}
+.panorama-shell.panorama-immersive {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  border-radius: 0;
+}
+.panorama-immersive .panorama-help {
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
+}
+.panorama-help strong {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+.panorama-immersive .panorama-controls {
+  bottom: max(16px, env(safe-area-inset-bottom));
+  right: max(16px, env(safe-area-inset-right));
+  flex-wrap: wrap;
+}
+.panorama-leave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  min-height: 48px;
+  border: 0;
+  border-radius: 10px;
+  background: #d3b31e;
+  color: #102f29;
+  font-weight: 700;
+}
+.panorama-immersive .immersive-scenes {
+  position: absolute;
+  z-index: 3;
+  top: calc(max(16px, env(safe-area-inset-top)) + 85px);
+  left: max(16px, env(safe-area-inset-left));
+  right: 16px;
+  padding: 0 0 8px;
+}
+.immersive-scenes button {
+  flex-shrink: 0;
+  background: #ffffffeb;
+}
+@media (max-width: 600px) {
+  .panorama-immersive .panorama-controls {
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    gap: 6px;
+  }
+  .panorama-immersive .panorama-controls .icon-button {
+    width: 44px;
+    height: 48px;
+    flex-shrink: 0;
+  }
+  .panorama-leave {
+    font-size: 12px;
+    padding: 0 10px;
+  }
+}
+.panorama-canvas {
+  height: 100%;
+  width: 100%;
+  touch-action: none;
+}
+.panorama-help {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  background: #001e18b8;
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-radius: 12px;
+  pointer-events: none;
+  font-size: 14px;
+  z-index: 2;
+}
+.panorama-controls {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 3;
+}
+.panorama-controls .icon-button {
+  width: 55px;
+  height: 55px;
+  background: white;
+  color: #006c65;
+  box-shadow: 0 4px 12px #0002;
+}
+.panorama-shell:fullscreen {
+  border-radius: 0;
+  height: 100dvh;
+  width: 100vw;
+}
+.panorama-error {
+  position: absolute;
+  inset: 0;
+  background: #f6f8f5;
+  display: grid;
+  place-items: center;
+  padding: 25px;
+}
+.scene-selector {
+  display: flex;
+  gap: 12px;
+  overflow: auto;
+  padding: 18px 0 8px;
+}
+.scene-selector button {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 12px;
+  padding: 15px 22px;
+  min-height: 56px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 15px;
+}
+.scene-selector button.active {
+  background: #006c65;
+  color: white;
+  border-color: #006c65;
+}
+.media-field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.upload-label {
+  display: flex;
+  position: relative;
+  padding: 14px 18px;
+  background: #e7f2ec;
+  border: 1px dashed #69a88e;
+  border-radius: 10px;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #006c65;
+  font-size: 14px;
+  cursor: pointer;
+}
+.upload-label input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.media-preview {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.media-field > small {
+  font-weight: 400;
+  color: #5d7669;
+}
+.admin-sidebar .brand {
+  white-space: normal;
+}
+.admin-sidebar .brand img {
+  width: 115px;
+  height: 65px;
+  object-fit: contain;
+  background: black;
+  border-radius: 7px;
+}
+.admin-main .section-heading {
+  flex-wrap: wrap;
+}
+.admin-main .section-heading > div {
+  margin-right: auto;
+}
+.admin-main .button {
+  font-size: 13px;
+  min-height: 48px;
+}
+.login-art {
+  background: #062e26;
+}
+.login-art em {
+  color: #d3b31e;
+}
+.admin-sidebar button.active {
+  color: #006c65;
+  background: #e3f1e9;
+}
+.notice {
+  color: #164c3a;
+  border-left-color: #00857c;
+  background: #e4f1e9;
+}
+.eyebrow {
+  color: #007a6e;
+}
+@media (min-width: 1500px) {
+  .kiosk-tile {
+    height: 270px;
+  }
+  .kiosk-home {
+    padding-top: 36px;
+  }
+  .kiosk-intro {
+    margin-bottom: 30px;
+  }
+}
+@media (max-width: 1100px) {
+  .kiosk-tile {
+    height: 210px;
+  }
+  .tile-content {
+    padding: 20px 16px;
+  }
+  .tile-content strong {
+    font-size: 20px;
+  }
+  .tile-content small {
+    font-size: 10px;
+  }
+  .tile-arrow {
+    width: 32px;
+    height: 32px;
+  }
+  .kiosk-intro h1 {
+    font-size: 34px;
+  }
+  .kiosk-header {
+    height: 82px;
+  }
+  .kiosk-logo img {
+    height: 64px;
+    width: 140px;
+  }
+  .kiosk-header-title {
+    font-size: 10px;
+  }
+  .kiosk-home {
+    min-height: calc(100dvh - 134px);
+  }
+  .pastoral-layout {
+    grid-template-columns: 1fr 260px;
+    gap: 20px;
+  }
+  .pastoral-form {
+    padding: 25px;
+  }
+  .places-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 850px) {
+  .kiosk-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+  .kiosk-tile {
+    height: 220px;
+  }
+  .tile-visit {
+    grid-column: span 3;
+    height: 180px;
+  }
+  .touch-instruction {
+    display: none;
+  }
+  .tile-content strong {
+    font-size: 21px;
+  }
+  .tile-content small {
+    font-size: 11px;
+  }
+  .kiosk-header-title {
+    border: 0;
+    padding: 0;
+  }
+  .kiosk-header-title > span {
+    font-size: 10px;
+  }
+  .kiosk-header-title small {
+    font-size: 11px;
+  }
+  .kiosk-intro {
+    margin-bottom: 22px;
+  }
+  .kiosk-home {
+    padding-top: 28px;
+  }
+  .kiosk-bottom {
+    font-size: 10px;
+    flex-wrap: wrap;
+  }
+  .contact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .pastoral-layout {
+    grid-template-columns: 1fr;
+  }
+  .pastoral-layout aside {
+    display: none;
+  }
+  .church-card {
+    grid-template-columns: 1fr;
+  }
+  .church-photo {
+    min-height: 260px;
+  }
+  .visit-heading {
+    flex-direction: column;
+    align-items: start;
+  }
+  .visit-heading p {
+    margin: 0;
+  }
+  .admin-sidebar .brand img {
+    width: 85px;
+  }
+}
+@media (max-width: 600px) {
+  .kiosk-header {
+    height: 76px;
+    padding: 8px 5%;
+    gap: 12px;
+  }
+  .kiosk-logo img {
+    width: 120px;
+    height: 58px;
+  }
+  .kiosk-header-title {
+    display: none;
+  }
+  .kiosk-header-actions {
+    margin-left: auto;
+    gap: 9px;
+  }
+  .kiosk-home-button {
+    font-size: 15px;
+    min-height: 48px;
+    padding: 10px 15px;
+    gap: 8px;
+  }
+  .kiosk-fullscreen {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .kiosk-home {
+    padding: 24px 5% 14px;
+  }
+  .kiosk-intro h1 {
+    font-size: 28px;
+  }
+  .kiosk-eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.16em;
+  }
+  .kiosk-intro p {
+    font-size: 14px;
+  }
+  .kiosk-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .kiosk-tile {
+    height: 205px;
+    border-radius: 15px;
+  }
+  .tile-visit {
+    grid-column: span 2;
+    height: 180px;
+  }
+  .tile-content {
+    padding: 17px 13px;
+    align-items: end;
+  }
+  .tile-content strong {
+    font-size: 19px;
+  }
+  .tile-content small {
+    font-size: 10px;
+    margin-top: 7px;
+  }
+  .tile-arrow {
+    display: none;
+  }
+  .tile-badge {
+    top: 13px;
+    left: 13px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    font-size: 12px;
+  }
+  .tile-badge svg {
+    width: 20px;
+  }
+  .tile-visit .tile-content strong {
+    font-size: 24px;
+  }
+  .tile-visit .tile-content small {
+    font-size: 12px;
+  }
+  .kiosk-bottom {
+    padding-top: 20px;
+    gap: 12px;
+  }
+  .kiosk-bottom > span:last-child {
+    display: none;
+  }
+  .kiosk-footer {
+    padding: 16px 5%;
+    font-size: 9px;
+    gap: 15px;
+  }
+  .kiosk-footer > a {
+    font-size: 10px !important;
+  }
+  .kiosk-footer > a:nth-child(2) {
+    display: none;
+  }
+  .kiosk-footer > a:last-child {
+    margin-left: auto;
+  }
+  .kiosk-footer > span {
+    width: auto;
+    margin: 0;
+  }
+  .section {
+    padding: 26px 5% 35px;
+  }
+  .page-heading h1 {
+    font-size: 34px;
+  }
+  .page-heading p {
+    font-size: 15px;
+  }
+  .page-heading .eyebrow {
+    font-size: 9px;
+  }
+  .ministry-card h3 {
+    font-size: 16px;
+  }
+  .ministry-card p {
+    font-size: 12px;
+  }
+  .ministry-card {
+    min-height: 165px;
+  }
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+  .contact-card .text-link {
+    font-size: 17px;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .pastoral-form {
+    padding: 22px;
+  }
+  .pastoral-page .form label {
+    font-size: 14px;
+  }
+  .pastoral-page input,
+  .pastoral-page select {
+    font-size: 16px;
+    min-height: 55px;
+  }
+  .pastoral-success {
+    padding: 30px 20px;
+  }
+  .church-card > div:last-child {
+    padding: 25px;
+  }
+  .church-card h2 {
+    font-size: 25px;
+  }
+  .church-photo {
+    min-height: 220px;
+  }
+  .church-card .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .places-grid {
+    grid-template-columns: 1fr;
+  }
+  .place-card {
+    min-height: 260px;
+  }
+  .visit-empty {
+    padding: 35px 20px;
+  }
+  .visit-empty h2 {
+    font-size: 24px;
+  }
+  .panorama-shell {
+    height: 62dvh;
+    border-radius: 14px;
+  }
+  .panorama-help {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    font-size: 11px;
+    gap: 8px;
+    padding: 12px;
+  }
+  .panorama-controls {
+    bottom: 14px;
+    right: 14px;
+    left: 14px;
+    justify-content: center;
+  }
+  .panorama-controls .icon-button {
+    width: 48px;
+    height: 48px;
+  }
+  .visit-heading h1 {
+    font-size: 29px;
+  }
+  .visit-section > .button {
+    font-size: 14px;
+  }
+  .scene-selector button {
+    font-size: 13px;
+  }
+  .admin-main .button {
+    font-size: 12px;
+  }
+  .login-form .button {
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-tile,
+  .kiosk-tile img {
+    transition: none !important;
+  }
+}
+
+.panorama-exit {
+  display: none;
+}
+.panorama-shell:fullscreen .panorama-exit {
+  position: absolute;
+  display: flex;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
+  border: 0;
+  min-height: 52px;
+  border-radius: 12px;
+  padding: 14px 20px;
+  background: white;
+  color: #006c65;
+  font-weight: 700;
+  font-size: 14px;
+}
+.kiosk-header {
+  background: #000;
+}
+html:fullscreen .kiosk-fullscreen {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+}
+html:fullscreen .kiosk-fullscreen:after {
+  content: "Quitter";
+}
+@media (max-width: 600px) {
+  .panorama-shell:fullscreen .panorama-exit {
+    top: 65px;
+    right: 12px;
+    font-size: 12px;
+    min-height: 46px;
+    padding: 12px 16px;
+  }
+}
+/* Textes animés automatiquement, indépendamment du survol. */
+.welcome-motion {
+  animation: welcome-drift 6s ease-in-out infinite;
+  transform-origin: left center;
+}
+.heading-motion {
+  animation: heading-drift 7s ease-in-out infinite;
+  transform-origin: left center;
+}
+.discover-motion {
+  display: inline-block;
+  background: linear-gradient(
+    100deg,
+    #007d70 15%,
+    #007d70 35%,
+    #b69912 50%,
+    #007d70 65%,
+    #007d70 85%
+  );
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+  animation: word-shimmer 6s ease-in-out infinite;
+}
+.hint-motion {
+  animation: hint-breathe 5s ease-in-out infinite;
+}
+@keyframes welcome-drift {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateX(9px);
+    opacity: 1;
+  }
+}
+@keyframes heading-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes word-shimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+    transform: translateY(0);
+  }
+  50% {
+    background-position: 100% 50%;
+    transform: translateY(-2px);
+  }
+}
+@keyframes hint-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.kiosk-grid .tile-visit {
+  grid-column: auto;
+  height: clamp(185px, 18vw, 280px);
+}
+.kiosk-grid .tile-visit .tile-content strong {
+  font-size: clamp(18px, 1.8vw, 25px);
+}
+.kiosk-grid .tile-visit .tile-content small {
+  font-size: 11px;
+}
+.large-department-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+.large-department-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: white;
+  border: 1px solid #d4e4db;
+  border-radius: 20px;
+  min-height: 245px;
+  padding: 28px;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s;
+  overflow-wrap: anywhere;
+}
+.large-department-card:hover {
+  transform: translateY(-4px);
+  border-color: #00857c;
+  box-shadow: 0 12px 25px #006c6512;
+}
+.department-symbol {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #e7f1e9;
+  color: #007d70;
+  display: grid;
+  place-items: center;
+  margin-bottom: 26px;
+}
+.department-number {
+  position: absolute;
+  right: 28px;
+  top: 32px;
+  color: #93a79c;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+}
+.large-department-card h2 {
+  font-size: 25px;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+.department-ministry {
+  display: block;
+  color: #007d70;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 23px;
+}
+.large-department-card p {
+  font-size: 14px;
+  margin: 0 0 25px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.department-open {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid #e0e9e3;
+  font-size: 13px;
+  font-weight: 600;
+  color: #007d70;
+}
+.departments-search .search {
+  max-width: 650px;
+}
+.departments-search input {
+  font-size: 18px;
+  min-height: 60px;
+}
+@media (min-width: 1500px) {
+  .kiosk-grid .tile-visit {
+    height: 270px;
+  }
+}
+@media (max-width: 1100px) {
+  .kiosk-grid .tile-visit {
+    height: 210px;
+  }
+  .kiosk-grid .tile-visit .tile-content strong {
+    font-size: 20px;
+  }
+  .large-department-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 601px) and (max-width: 850px) {
+  .kiosk-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .kiosk-grid .kiosk-tile {
+    grid-column: span 2;
+    height: 205px;
+  }
+  .kiosk-grid .kiosk-tile:nth-last-child(-n + 2) {
+    grid-column: span 3;
+  }
+  .kiosk-grid .tile-visit .tile-content strong {
+    font-size: 21px;
+  }
+}
+@media (max-width: 600px) {
+  .kiosk-grid .tile-visit {
+    grid-column: auto;
+    height: 205px;
+  }
+  .kiosk-grid .tile-visit .tile-content strong {
+    font-size: 19px;
+  }
+  .kiosk-grid .tile-visit .tile-content small {
+    font-size: 10px;
+  }
+  .large-department-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .large-department-card {
+    min-height: 235px;
+    padding: 26px;
+  }
+  .large-department-card h2 {
+    font-size: 26px;
+  }
+  .departments-search input {
+    font-size: 16px;
+  }
+  .departments-search > span {
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-motion,
+  .heading-motion,
+  .discover-motion,
+  .hint-motion {
+    animation: none !important;
+  }
+  .discover-motion {
+    background: none;
+    color: #007d70 !important;
+  }
+}
