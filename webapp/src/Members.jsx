@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, Route, Routes, useNavigate } from "react-router-dom";
+import {
+  Link,
+  Route,
+  Routes,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { Users, UserPlus, LogIn, CheckCircle2, LogOut } from "lucide-react";
 import { Notice } from "./Shared";
 import { GroupManagement } from "./MembershipAdmin";
@@ -49,7 +55,7 @@ function Registration() {
     setError("");
     const data = new FormData(event.currentTarget);
     try {
-      await memberApi("/membership/register", {
+      const result = await memberApi("/membership/register", {
         method: "POST",
         body: {
           ...Object.fromEntries(data),
@@ -60,7 +66,10 @@ function Registration() {
       });
       navigate("/membre/bienvenue", {
         replace: true,
-        state: { registered: true },
+        state: {
+          registered: true,
+          unique_identification: result.unique_identification,
+        },
       });
     } catch (e) {
       setError(e.message);
@@ -259,33 +268,25 @@ function Login({ onLogin }) {
     <section className="section member-section">
       <div className="page-heading">
         <h1>Je suis déjà membre</h1>
-        <p>Connectez-vous à votre espace avec votre nom et votre téléphone.</p>
+        <p>
+          Connectez-vous avec votre identifiant membre à six chiffres et votre
+          mot de passe.
+        </p>
       </div>
       <form className="form narrow" onSubmit={submit}>
         <label>
-          Nom et prénoms
+          Identifiant membre (6 chiffres)
           <input
-            name="full_name"
-            autoComplete="name"
-            maxLength={255}
-            required
-          />
-        </label>
-        <label>
-          Téléphone
-          <input
-            name="phone"
-            type="tel"
+            name="unique_identification"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]{6}"
             autoComplete="username"
-            maxLength={40}
+            minLength={6}
+            maxLength={6}
             required
           />
         </label>
-        <SelectChoices
-          name="sex"
-          label="Sexe"
-          options={{ male: "Homme", female: "Femme" }}
-        />
         <label>
           Mot de passe
           <input
@@ -298,7 +299,8 @@ function Login({ onLogin }) {
         </label>
         <p className="member-help">
           Lors de votre première connexion, votre mot de passe est « password ».
-          Vous pourrez ensuite le personnaliser.
+          Vous pourrez ensuite le personnaliser. Si vous avez oublié votre
+          identifiant, contactez l’équipe de l’église.
         </p>
         {error && <Notice>{error}</Notice>}
         <button className="button" disabled={busy}>
@@ -357,6 +359,11 @@ function MemberSpace({ token, onLogout }) {
         <div>
           <span className="eyebrow">MON ESPACE MEMBRE</span>
           <h1>Bienvenue{me ? `, ${me.full_name}` : ""}</h1>
+          {me && (
+            <p>
+              Identifiant membre : <strong>{me.unique_identification}</strong>
+            </p>
+          )}
         </div>
         <button className="button secondary" onClick={() => onLogout()}>
           <LogOut size={18} /> Déconnexion
@@ -396,6 +403,7 @@ function MemberSpace({ token, onLogout }) {
   );
 }
 export default function MemberPortal() {
+  const location = useLocation();
   const [token, setToken] = useState(sessionStorage.getItem("vh-member-token")),
     [message, setMessage] = useState("");
   const navigate = useNavigate();
@@ -465,6 +473,15 @@ export default function MemberPortal() {
               <CheckCircle2 size={64} />
               <h1>Bienvenue au Centre Éden !</h1>
               <p>Vos informations ont bien été prises en compte.</p>
+              {location.state?.unique_identification && (
+                <p>
+                  Votre identifiant membre :{" "}
+                  <strong>{location.state.unique_identification}</strong>
+                  <br />
+                  Conservez ce numéro à six chiffres pour vous connecter à votre
+                  espace membre.
+                </p>
+              )}
               <p>Merci. Notre équipe est heureuse de vous accueillir.</p>
               <Link className="button" to="/">
                 Retour à l’accueil

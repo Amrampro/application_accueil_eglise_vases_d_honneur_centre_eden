@@ -29,6 +29,12 @@ export function normalizeName(value) {
     .toLocaleLowerCase("fr")
     .replace(/[^\p{L}\p{N}]/gu, "");
 }
+export function uniqueIdentification(value) {
+  const result = text(value, "Identifiant membre", 6, true);
+  if (!/^\d{6}$/.test(result))
+    fail("L’identifiant membre doit contenir exactement 6 chiffres.");
+  return result;
+}
 export function normalizePhone(value) {
   const raw = text(value, "Téléphone", 40, true);
   if (!/^[+\d\s().-]+$/.test(raw)) fail("Téléphone invalide.");

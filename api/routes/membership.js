@@ -12,8 +12,7 @@ import {
   id,
   text,
   choice,
-  normalizeName,
-  normalizePhone,
+  uniqueIdentification,
   pagination,
   day,
   dateTime,
@@ -28,7 +27,7 @@ router.use(
   },
 );
 const profileColumns =
-  "id,full_name,sex,neighborhood,municipality,phone,profession,community,attends_regularly,referral_channels,referrer_name,referrer_contact,referral_other,age_range,marital_status,service_number,notes,joined_on,created_at";
+  "id,unique_identification,full_name,sex,neighborhood,municipality,phone,profession,community,attends_regularly,referral_channels,referrer_name,referrer_contact,referral_other,age_range,marital_status,service_number,notes,joined_on,created_at";
 const limited = (limit) =>
   rateLimit({
     windowMs: 900000,
@@ -98,8 +97,9 @@ router.post(
       month: "2-digit",
       day: "2-digit",
     }).format(new Date());
+    let identification;
     try {
-      await transaction(async (db) => {
+      identification = await transaction(async (db) => {
         let decisions = [];
         if (decisionIds.length) {
           [decisions] = await db.query(
@@ -122,6 +122,11 @@ router.post(
             "INSERT INTO member_decisions (member_id,decision_id,decision_number,meaning,directive) VALUES (?,?,?,?,?)",
             [result.insertId, d.id, d.decision_number, d.meaning, d.directive],
           );
+        const [members] = await db.execute(
+          "SELECT unique_identification FROM members WHERE id=?",
+          [result.insertId],
+        );
+        return members[0].unique_identification;
       });
     } catch (e) {
       if (e.code === "ER_DUP_ENTRY")
@@ -133,6 +138,7 @@ router.post(
     }
     res.status(201).json({
       message: "Bienvenue ! Vos informations ont bien été prises en compte.",
+      unique_identification: identification,
     });
   }),
 );
@@ -140,28 +146,15 @@ router.post(
   "/membership/login",
   limited(15),
   wrap(async (req, res) => {
-    const phone = normalizePhone(req.body.phone);
-    const name = text(req.body.full_name, "Nom et prénoms", 255, true);
-    const sex = choice(req.body.sex, ["male", "female"], "Sexe");
+    const identification = uniqueIdentification(req.body.unique_identification);
     const password = text(req.body.password, "Mot de passe", 250, true);
     const [rows] = await pool.execute(
-      "SELECT id,full_name,password_hash,token_version FROM members WHERE phone_normalized=? AND sex=?",
-      [phone, sex],
+      "SELECT id,unique_identification,full_name,password_hash,token_version FROM members WHERE unique_identification=?",
+      [identification],
     );
-    const candidates = rows.filter(
-      (row) => normalizeName(row.full_name) === normalizeName(name),
-    );
-    let member;
-    for (const row of candidates)
-      if (await bcrypt.compare(password, row.password_hash)) {
-        if (member)
-          fail(
-            "Plusieurs fiches correspondent. Contactez le secrétariat.",
-            409,
-          );
-        member = row;
-      }
-    if (!member) fail("Nom, téléphone ou mot de passe incorrect.", 401);
+    const member = rows[0];
+    if (!member || !(await bcrypt.compare(password, member.password_hash)))
+      fail("Identifiant membre ou mot de passe incorrect.", 401);
     res.json({
       token: jwt.sign(
         { version: member.token_version },
@@ -174,6 +167,7 @@ router.post(
         },
       ),
       name: member.full_name,
+      unique_identification: member.unique_identification,
     });
   }),
 );
@@ -221,8 +215,10 @@ async function listMembers(req, res, directory = false) {
   if (directory && q.length < 2)
     return res.json({ rows: [], total: 0, page, page_size: 20 });
   if (q) {
-    where.push("(full_name LIKE ? OR phone LIKE ?)");
-    args.push(`%${q}%`, `%${q}%`);
+    where.push(
+      "(full_name LIKE ? OR phone LIKE ? OR unique_identification LIKE ?)",
+    );
+    args.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
   if (!directory) {
     if (req.query.from) {
@@ -242,7 +238,7 @@ async function listMembers(req, res, directory = false) {
     args,
   );
   const [rows] = await pool.execute(
-    `SELECT id,full_name,sex,phone,municipality,joined_on FROM members${filter} ORDER BY joined_on DESC,id DESC LIMIT 20 OFFSET ${offset}`,
+    `SELECT id,unique_identification,full_name,sex,phone,municipality,joined_on FROM members${filter} ORDER BY joined_on DESC,id DESC LIMIT 20 OFFSET ${offset}`,
     args,
   );
   res.json({ rows, total: count[0].total, page, page_size: 20 });
@@ -436,14 +432,14 @@ for (const prefix of ["/member/groups", "/admin/membership/groups"]) {
       const { page, offset } = pagination(req.query);
       const q = text(req.query.q, "Recherche");
       const filter =
-        " FROM group_members gm JOIN members m ON m.id=gm.member_id WHERE gm.group_id=? AND (m.full_name LIKE ? OR m.phone LIKE ?)";
-      const args = [group.id, `%${q}%`, `%${q}%`];
+        " FROM group_members gm JOIN members m ON m.id=gm.member_id WHERE gm.group_id=? AND (m.full_name LIKE ? OR m.phone LIKE ? OR m.unique_identification LIKE ?)";
+      const args = [group.id, `%${q}%`, `%${q}%`, `%${q}%`];
       const [count] = await pool.execute(
         "SELECT COUNT(*) AS total" + filter,
         args,
       );
       const [rows] = await pool.execute(
-        "SELECT m.id,m.full_name,m.phone,m.sex,m.municipality,m.joined_on" +
+        "SELECT m.id,m.unique_identification,m.full_name,m.phone,m.sex,m.municipality,m.joined_on" +
           filter +
           ` ORDER BY m.full_name,m.id LIMIT 20 OFFSET ${offset}`,
         args,

@@ -74,6 +74,7 @@ test("Parcours membres isolé : inscription, doublons, droits, groupes, suivi et
     const created = await call("/membership/register", "POST", body);
     assert.equal(created.status, 201);
     assert.equal(created.data.token, undefined);
+    assert.match(created.data.unique_identification, /^[1-9][0-9]{5}$/);
     const duplicate = await call("/membership/register", "POST", {
       ...body,
       full_name: "ELODIE  KOUAME",
@@ -124,11 +125,11 @@ test("Parcours membres isolé : inscription, doublons, droits, groupes, suivi et
       201,
     );
     const [assistRows] = await db.query(
-      "SELECT id FROM members WHERE full_name='Assistant'",
+      "SELECT id,unique_identification FROM members WHERE full_name='Assistant'",
     );
     const assistantId = assistRows[0].id;
     const [guestRows] = await db.query(
-      "SELECT id FROM members WHERE full_name='Visiteur'",
+      "SELECT id,unique_identification FROM members WHERE full_name='Visiteur'",
     );
     const guestId = guestRows[0].id;
     await db.execute(
@@ -147,21 +148,55 @@ test("Parcours membres isolé : inscription, doublons, droits, groupes, suivi et
     ).data.token;
     const token = (
       await call("/membership/login", "POST", {
-        full_name: body.full_name,
-        phone: body.phone,
-        sex: body.sex,
+        unique_identification: created.data.unique_identification,
         password: "password",
       })
     ).data.token;
     const guestToken = (
       await call("/membership/login", "POST", {
-        full_name: "Visiteur",
-        phone: "0102030408",
-        sex: "female",
+        unique_identification: guestRows[0].unique_identification,
         password: "password",
       })
     ).data.token;
     assert.ok(token);
+    assert.equal(
+      (
+        await call("/membership/login", "POST", {
+          unique_identification: created.data.unique_identification,
+          password: "incorrect",
+        })
+      ).status,
+      401,
+    );
+    assert.equal(
+      (
+        await call("/membership/login", "POST", {
+          unique_identification: "000000",
+          password: "password",
+        })
+      ).status,
+      401,
+    );
+    assert.equal(
+      (
+        await call("/membership/login", "POST", {
+          unique_identification: "12345",
+          password: "password",
+        })
+      ).status,
+      400,
+    );
+    assert.equal(
+      (
+        await call("/membership/login", "POST", {
+          full_name: body.full_name,
+          phone: body.phone,
+          sex: body.sex,
+          password: "password",
+        })
+      ).status,
+      400,
+    );
     assert.equal(
       (await call("/admin/me", "GET", undefined, token)).status,
       401,
@@ -229,9 +264,7 @@ test("Parcours membres isolé : inscription, doublons, droits, groupes, suivi et
     );
     const assistantToken = (
       await call("/membership/login", "POST", {
-        full_name: "Assistant",
-        phone: "0102030407",
-        sex: "male",
+        unique_identification: assistRows[0].unique_identification,
         password: "password",
       })
     ).data.token;
@@ -369,6 +402,28 @@ test("Parcours membres isolé : inscription, doublons, droits, groupes, suivi et
       await call("/admin/membership/members?page=2", "GET", undefined, admin)
     ).data;
     assert.equal(page1.rows.length, 20);
+    assert.ok(
+      [...page1.rows, ...page2.rows].every((m) =>
+        /^[1-9][0-9]{5}$/.test(m.unique_identification),
+      ),
+    );
+    assert.equal(
+      new Set(
+        [...page1.rows, ...page2.rows].map((m) => m.unique_identification),
+      ).size,
+      page1.total,
+    );
+    assert.equal(
+      (
+        await call(
+          `/admin/membership/members?q=${created.data.unique_identification}`,
+          "GET",
+          undefined,
+          admin,
+        )
+      ).data.rows[0].unique_identification,
+      created.data.unique_identification,
+    );
     assert.equal(page2.rows.length, 8);
     assert.ok(page1.rows.every((a) => !page2.rows.some((b) => b.id === a.id)));
     const filtered = await call(
@@ -378,6 +433,11 @@ test("Parcours membres isolé : inscription, doublons, droits, groupes, suivi et
       admin,
     );
     assert.equal(filtered.data.total, 23);
+    assert.ok(
+      filtered.data.rows.every((m) =>
+        /^[1-9][0-9]{5}$/.test(m.unique_identification),
+      ),
+    );
     assert.equal(
       (
         await call(
@@ -442,10 +502,111 @@ test("Parcours membres isolé : inscription, doublons, droits, groupes, suivi et
       (await call("/member/me", "GET", undefined, token)).status,
       401,
     );
+    assert.equal(
+      (
+        await call("/membership/login", "POST", {
+          unique_identification: created.data.unique_identification,
+          password: "new-member-password",
+        })
+      ).status,
+      200,
+    );
   } finally {
     if (server) await new Promise((r) => server.close(r));
     if (pool) await pool.end();
     await db.query(`DROP DATABASE IF EXISTS \`${database}\``);
+    await db.end();
+  }
+});
+
+test("Migration des membres existants et attribution automatique sur toute insertion SQL", async () => {
+  const db = await mysql.createConnection(config);
+  const name = `${database}_migration`;
+  let concurrentPool;
+  try {
+    await db.query(
+      `CREATE DATABASE \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
+    );
+    await db.query(`USE \`${name}\``);
+    const migration = await readFile(
+      new URL(
+        "../database/migrations/005-member-identification.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const schema = await readFile(
+      new URL("../database/schema.sql", import.meta.url),
+      "utf8",
+    );
+    assert.ok(schema.includes(migration));
+    await db.query(schema.replace(migration, ""));
+    const hash = await bcrypt.hash("existing-personal-password", 4);
+    const insert = (connection, n, extra = "") =>
+      connection.execute(
+        `INSERT INTO members(full_name,sex,phone,phone_normalized,referral_channels,age_range,marital_status,notes,joined_on,password_hash,identity_key${extra ? ",unique_identification" : ""}) VALUES(?,'female',?,?,'[]','21-30','single','','2026-01-01',?,?${extra ? ",?" : ""})`,
+        [
+          `Membre ${n}`,
+          `010000${String(n).padStart(4, "0")}`,
+          `010000${String(n).padStart(4, "0")}`,
+          hash,
+          String(n).padStart(64, "0"),
+          ...(extra ? [extra] : []),
+        ],
+      );
+    await insert(db, 1);
+    await insert(db, 2);
+    await db.query(migration);
+    const [before] = await db.query(
+      "SELECT id,unique_identification,password_hash FROM members ORDER BY id",
+    );
+    assert.equal(before.length, 2);
+    assert.ok(
+      before.every((m) => /^[1-9][0-9]{5}$/.test(m.unique_identification)),
+    );
+    assert.notEqual(
+      before[0].unique_identification,
+      before[1].unique_identification,
+    );
+    assert.ok(before.every((m) => m.password_hash === hash));
+    concurrentPool = mysql.createPool({
+      ...config,
+      database: name,
+      connectionLimit: 8,
+    });
+    await Promise.all(
+      Array.from({ length: 8 }, (_, index) =>
+        insert(concurrentPool, index + 3),
+      ),
+    );
+    await insert(db, 11, "000000");
+    const [members] = await db.query(
+      "SELECT unique_identification FROM members",
+    );
+    assert.equal(members.length, 11);
+    assert.equal(new Set(members.map((m) => m.unique_identification)).size, 11);
+    assert.ok(
+      members.every((m) => /^[1-9][0-9]{5}$/.test(m.unique_identification)),
+    );
+    await db.execute("UPDATE members SET notes=? WHERE id=?", [
+      "Note mise à jour",
+      before[0].id,
+    ]);
+    const [same] = await db.execute(
+      "SELECT unique_identification FROM members WHERE id=?",
+      [before[0].id],
+    );
+    assert.equal(
+      same[0].unique_identification,
+      before[0].unique_identification,
+    );
+    await db.query(
+      "UPDATE member_identification_counter SET next_value=900001 WHERE id=1",
+    );
+    await assert.rejects(insert(db, 12), (error) => error.sqlState === "45000");
+  } finally {
+    if (concurrentPool) await concurrentPool.end();
+    await db.query(`DROP DATABASE IF EXISTS \`${name}\``);
     await db.end();
   }
 });

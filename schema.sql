@@ -181,7 +181,35 @@ INSERT INTO decision_today (decision_number,meaning,directive) VALUES
 (10,'Comment intégrer Vases d’Honneur','Intégrer l’église commence par remplir la fiche d’identification, participer aux cultes, intégrer une tribu, une famille d’honneur et servir dans un département. N.B. : être baptisé par immersion et faire le prochain cours de membres (cours d’explication de la vision et de l’organisation de l’église) pour servir dans un département.'),
 (11,'Comment faire partie des familles d’honneur','En attente de la création des familles d’honneur de Niangon ou celles déjà créées par le Centre Yopougon ou se trouvant à Niangon.'),
 (12,'J’ai besoin de prières','Prier avec lui selon ses sujets et l’orienter au… [Fin de la directive non visible sur la capture : à compléter.]');
+
+-- L’identifiant public reste distinct de la clé primaire et de la clé anti-doublon.
+ALTER TABLE members ADD COLUMN unique_identification CHAR(6) CHARACTER SET ascii COLLATE ascii_bin NULL;
+UPDATE members m
+JOIN (SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS sequence_number FROM members) numbered ON numbered.id=m.id
+SET m.unique_identification=CAST(100000 + MOD(numbered.sequence_number * 7919 + 104729, 900000) AS CHAR);
+ALTER TABLE members
+  MODIFY unique_identification CHAR(6) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
+  ADD CONSTRAINT members_unique_identification UNIQUE (unique_identification),
+  ADD CONSTRAINT members_identification_format CHECK (unique_identification REGEXP '^[1-9][0-9]{5}$');
+CREATE TABLE member_identification_counter (
+ id TINYINT UNSIGNED PRIMARY KEY,
+ next_value INT UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO member_identification_counter (id,next_value) SELECT 1,COUNT(*)+1 FROM members;
+-- Le verrou transactionnel du compteur garantit l’unicité même en cas d’inscriptions simultanées.
+-- 7919 est premier avec 900000 : la permutation produit 900000 codes différents de six chiffres.
+CREATE TRIGGER members_assign_identification BEFORE INSERT ON members FOR EACH ROW
+BEGIN
+  DECLARE sequence_number INT UNSIGNED;
+  SELECT next_value INTO sequence_number FROM member_identification_counter WHERE id=1 FOR UPDATE;
+  IF sequence_number > 900000 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Tous les identifiants membre à six chiffres ont été attribués.';
+  END IF;
+  UPDATE member_identification_counter SET next_value=next_value+1 WHERE id=1;
+  SET NEW.unique_identification=CAST(100000 + MOD(sequence_number * 7919 + 104729, 900000) AS CHAR);
+END;
 CREATE TABLE schema_migrations (filename VARCHAR(255) PRIMARY KEY,checksum CHAR(64) NOT NULL,executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
 INSERT INTO schema_migrations (filename,checksum) VALUES ('002-kiosk-tours.sql','557ea6c94f88f01dc9e9188929966e9b8ec887d3beeb752030adaf6a8921fd15');
 INSERT INTO schema_migrations (filename,checksum) VALUES ('003-location-donations.sql','835040ee57215da498022323655e13e0d8c2640fce9224bd43470e6156fd6dba');
 INSERT INTO schema_migrations (filename,checksum) VALUES ('004-members-groups.sql','efa2b39a2469f7a3c1b5fad9cc51f215ad438be9a954f4cc1f9841c5bebf2030');
+INSERT INTO schema_migrations (filename,checksum) VALUES ('005-member-identification.sql','52b3dc1b141a4c38a44306a8692a48798a6a397b42787d40448a19990ae5f4e6');

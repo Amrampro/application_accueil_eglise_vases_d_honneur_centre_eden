@@ -89,3 +89,23 @@ test("Les rendez-vous de suivi restent à l’heure de Bruxelles, été comme hi
   assert.equal(actionDateToIso("2026-12-16T10:00"), "2026-12-16T09:00:00.000Z");
   assert.throws(() => actionDateToIso("2026-03-29T02:30"), /n’existe pas/);
 });
+
+import { uniqueIdentification } from "../services/membership.js";
+test("La connexion exige un identifiant texte de six chiffres", () => {
+  assert.equal(uniqueIdentification("123456"), "123456");
+  for (const value of [
+    undefined,
+    123456,
+    "12345",
+    "1234567",
+    "12A456",
+    "-12345",
+    "1e0001",
+  ])
+    assert.throws(() => uniqueIdentification(value));
+  assert.equal(
+    registration({ ...body, unique_identification: "123456" })
+      .unique_identification,
+    undefined,
+  );
+});

@@ -147,11 +147,18 @@ sql +=
     "utf8",
   );
 sql +=
+  "\n" +
+  readFileSync(
+    new URL("./migrations/005-member-identification.sql", import.meta.url),
+    "utf8",
+  );
+sql +=
   "CREATE TABLE schema_migrations (filename VARCHAR(255) PRIMARY KEY,checksum CHAR(64) NOT NULL,executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);\n";
 for (const filename of [
   "002-kiosk-tours.sql",
   "003-location-donations.sql",
   "004-members-groups.sql",
+  "005-member-identification.sql",
 ]) {
   const checksum = createHash("sha256")
     .update(readFileSync(new URL("./migrations/" + filename, import.meta.url)))
@@ -168,7 +175,7 @@ writeFileSync(new URL("./schema.sql", import.meta.url), sql);
 const reset = `-- ATTENTION : supprime les données des tables de l’application.
 -- Sauvegarder avant utilisation. Sélectionner vase_honneur dans phpMyAdmin.
 -- Puis importer schema.sql. Aucune désactivation des clés étrangères.
-${["schema_migrations", "member_actions", "group_members", "member_groups", "member_decisions", "members", "decision_today", "requests", "panoramas", "departments", "cells", "pastors", "events", "contacts", "schools", "ministries", "tours", "churches", "settings", "admins"].map((table) => `DROP TABLE IF EXISTS ${table};`).join("\n")}
+${["schema_migrations", "member_actions", "group_members", "member_groups", "member_decisions", "members", "member_identification_counter", "decision_today", "requests", "panoramas", "departments", "cells", "pastors", "events", "contacts", "schools", "ministries", "tours", "churches", "settings", "admins"].map((table) => `DROP TABLE IF EXISTS ${table};`).join("\n")}
 `;
 writeFileSync(new URL("./reset.sql", import.meta.url), reset);
 console.log(

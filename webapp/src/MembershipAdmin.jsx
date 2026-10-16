@@ -72,7 +72,7 @@ function Pagination({ data, onPage }) {
 }
 function SearchBox({
   onSearch,
-  placeholder = "Rechercher un nom ou un téléphone",
+  placeholder = "Rechercher un nom, un téléphone ou un identifiant",
 }) {
   return (
     <form
@@ -225,6 +225,7 @@ function MemberTable({ data, onOpen, actions }) {
         <table>
           <thead>
             <tr>
+              <th>Identifiant membre</th>
               <th>Nom et prénoms</th>
               <th>Téléphone</th>
               <th>Commune</th>
@@ -235,6 +236,9 @@ function MemberTable({ data, onOpen, actions }) {
           <tbody>
             {data.rows.map((m) => (
               <tr key={m.id}>
+                <td>
+                  <strong>{m.unique_identification}</strong>
+                </td>
                 <td>
                   <button className="text-link" onClick={() => onOpen(m)}>
                     {m.full_name}
@@ -368,6 +372,7 @@ export function MemberProfile({ path, onClose, groupPrefix }) {
     [actionVersion, setActionVersion] = useState(0);
   const details = m
     ? {
+        "Identifiant membre": m.unique_identification,
         Sexe: m.sex === "male" ? "Homme" : "Femme",
         Téléphone: m.phone,
         Quartier: m.neighborhood,
