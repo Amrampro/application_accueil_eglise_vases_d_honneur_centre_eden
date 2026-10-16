@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
+  Church,
   Users,
   Network,
   BookOpen,
@@ -24,6 +25,13 @@ import { mediaUrl } from "./MediaUpload";
 
 const choices = [
   [
+    "contacts",
+    "Nous contacter",
+    "Le bon contact pour votre besoin",
+    "/contacts",
+    Phone,
+  ],
+  [
     "location",
     "Nous localiser",
     "Retrouver notre église sur la carte",
@@ -36,6 +44,27 @@ const choices = [
     "Soutenir l’œuvre et la vie de l’église",
     "/donner",
     HeartHandshake,
+  ],
+  [
+    "appointment",
+    "Rendez-vous pastoral",
+    "Demander un accompagnement",
+    "/rdv-pastoral",
+    HeartHandshake,
+  ],
+  [
+    "agenda",
+    "Agenda",
+    "Nos prochaines rencontres",
+    "/agenda",
+    CalendarDays,
+  ],
+  [
+    "churches",
+    "Nos Églises",
+    "Découvrir les églises et leurs informations",
+    "/eglises",
+    Church,
   ],
   [
     "ministries",
@@ -51,28 +80,26 @@ const choices = [
     "/departements",
     Network,
   ],
-  ["schools", "Nos formations", "Grandir dans la foi", "/formations", BookOpen],
-  ["agenda", "Agenda", "Nos prochaines rencontres", "/agenda", CalendarDays],
   [
-    "appointment",
-    "Rendez-vous pastoral",
-    "Demander un accompagnement",
-    "/rdv-pastoral",
-    HeartHandshake,
-  ],
-  [
-    "contacts",
-    "Nous contacter",
-    "Le bon contact pour votre besoin",
-    "/contacts",
-    Phone,
+    "schools",
+    "Nos formations",
+    "Grandir dans la foi",
+    "/formations",
+    BookOpen,
   ],
   [
     "visit",
-    "Visiter notre église",
+    "Visiter mon église",
     "Explorer nos espaces en 360°",
     "/visiter",
     View,
+  ],
+  [
+    "members",
+    "Espace Membre",
+    "Nouveau membre ou déjà membre",
+    "/membre",
+    Users,
   ],
 ];
 export function KioskHome({ data }) {
@@ -107,9 +134,11 @@ export function KioskHome({ data }) {
                 "/images/" +
                 (key === "location"
                   ? "churches"
-                  : key === "donation"
-                    ? "appointment"
-                    : key) +
+                  : key === "members"
+                    ? "ministries"
+                    : key === "donation"
+                      ? "appointment"
+                      : key) +
                 ".jpg"
               }
               alt=""

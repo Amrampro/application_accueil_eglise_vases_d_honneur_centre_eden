@@ -11,6 +11,7 @@ import jwt from "jsonwebtoken";
 import { rateLimit } from "express-rate-limit";
 import { pool } from "../config/db.js";
 import { auth } from "../middlewares/auth.js";
+import membership from "./membership.js";
 import {
   wrap,
   publicContent,
@@ -20,6 +21,7 @@ import {
   submit,
 } from "../controllers/content.js";
 const router = Router();
+router.use(membership);
 router.get(
   "/health",
   wrap(async (req, res) => {
@@ -198,17 +200,19 @@ router.put(
           new URL(req.body.map_embed_url).searchParams.get("output") === "embed"
         ))
     )
-      return res
-        .status(400)
-        .json({
-          message:
-            "Utilisez l’URL Google Maps /maps/embed de la carte intégrée.",
-        });
+      return res.status(400).json({
+        message: "Utilisez l’URL Google Maps /maps/embed de la carte intégrée.",
+      });
     if (req.body.map_url && !req.body.map_embed_url) {
       try {
         req.body.map_embed_url = await resolveMapEmbed(req.body.map_url);
       } catch {
-        return res.status(400).json({ message: "Impossible de préparer la carte à partir de ce lien. Dans Google Maps, choisissez Partager > Intégrer une carte, puis copiez l’adresse src dans le champ URL de carte intégrée." });
+        return res
+          .status(400)
+          .json({
+            message:
+              "Impossible de préparer la carte à partir de ce lien. Dans Google Maps, choisissez Partager > Intégrer une carte, puis copiez l’adresse src dans le champ URL de carte intégrée.",
+          });
       }
     }
     const values = fields.map((k) => req.body[k]);

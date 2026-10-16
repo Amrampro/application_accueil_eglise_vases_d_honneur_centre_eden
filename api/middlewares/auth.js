@@ -7,6 +7,10 @@ export async function auth(req, res, next) {
       process.env.JWT_SECRET,
       { algorithms: ["HS256"] },
     );
+    if (payload.aud)
+      return res
+        .status(401)
+        .json({ message: "Veuillez vous connecter à l’administration." });
     const [users] = await pool.execute(
       "SELECT id,token_version FROM admins WHERE id=?",
       [payload.sub],

@@ -17,6 +17,11 @@ import { api } from "./api";
 import { Modal, Notice } from "./Shared";
 import { labels } from "./config";
 import MediaUpload, { BatchPanoramas } from "./MediaUpload";
+import {
+  MemberManagement,
+  DecisionManagement,
+  GroupManagement,
+} from "./MembershipAdmin";
 const fieldLabels = {
   name: "Nom",
   description: "Description",
@@ -377,7 +382,11 @@ export default function Admin() {
       } else if (resource === "requests") {
         const result = await api("/admin/requests");
         if (current === generation.current) setRows(result);
-      } else if (resource !== "password") {
+      } else if (
+        !["password", "members", "member-groups", "decisions"].includes(
+          resource,
+        )
+      ) {
         const [result, allMinistries, allTours] = await Promise.all([
           api("/admin/content/" + resource),
           api("/admin/content/ministries"),
@@ -559,6 +568,24 @@ export default function Admin() {
           <Inbox size={18} /> Demandes reçues
         </button>
         <span className="eyebrow">CONTENUS DE L’ÉGLISE</span>
+        <button
+          className={resource === "members" ? "active" : ""}
+          onClick={() => setResource("members")}
+        >
+          Membres
+        </button>
+        <button
+          className={resource === "member-groups" ? "active" : ""}
+          onClick={() => setResource("member-groups")}
+        >
+          Groupes des membres
+        </button>
+        <button
+          className={resource === "decisions" ? "active" : ""}
+          onClick={() => setResource("decisions")}
+        >
+          Décisions du jour
+        </button>
         {Object.entries(labels).map(([key, label]) => (
           <button
             key={key}
@@ -599,6 +626,9 @@ export default function Admin() {
                   requests: "Demandes reçues",
                   settings: "Informations générales",
                   password: "Mot de passe",
+                  members: "Membres",
+                  "member-groups": "Groupes des membres",
+                  decisions: "Décisions du jour",
                 }[resource]}
             </h1>
           </div>
@@ -615,7 +645,13 @@ export default function Admin() {
         </div>
         {error && <Notice>{error}</Notice>}
         {message && <Notice>{message}</Notice>}
-        {loading ? (
+        {resource === "members" ? (
+          <MemberManagement />
+        ) : resource === "member-groups" ? (
+          <GroupManagement />
+        ) : resource === "decisions" ? (
+          <DecisionManagement />
+        ) : loading ? (
           <div className="loading">Chargement…</div>
         ) : resource === "dashboard" && summary ? (
           <>

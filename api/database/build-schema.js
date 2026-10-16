@@ -1,4 +1,5 @@
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 const groups = [
   [
     "Expansion",
@@ -139,12 +140,35 @@ sql = sql.replace(
   /(CREATE TABLE [^;]+);/g,
   "$1 ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
 );
+sql +=
+  "\n" +
+  readFileSync(
+    new URL("./migrations/004-members-groups.sql", import.meta.url),
+    "utf8",
+  );
+sql +=
+  "CREATE TABLE schema_migrations (filename VARCHAR(255) PRIMARY KEY,checksum CHAR(64) NOT NULL,executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);\n";
+for (const filename of [
+  "002-kiosk-tours.sql",
+  "003-location-donations.sql",
+  "004-members-groups.sql",
+]) {
+  const checksum = createHash("sha256")
+    .update(readFileSync(new URL("./migrations/" + filename, import.meta.url)))
+    .digest("hex");
+  sql +=
+    "INSERT INTO schema_migrations (filename,checksum) VALUES (" +
+    q(filename) +
+    "," +
+    q(checksum) +
+    ");\n";
+}
 writeFileSync(new URL("../../schema.sql", import.meta.url), sql);
 writeFileSync(new URL("./schema.sql", import.meta.url), sql);
 const reset = `-- ATTENTION : supprime les données des tables de l’application.
 -- Sauvegarder avant utilisation. Sélectionner vase_honneur dans phpMyAdmin.
 -- Puis importer schema.sql. Aucune désactivation des clés étrangères.
-${["requests", "panoramas", "departments", "cells", "pastors", "events", "contacts", "schools", "ministries", "tours", "churches", "settings", "admins"].map((table) => `DROP TABLE IF EXISTS ${table};`).join("\n")}
+${["schema_migrations", "member_actions", "group_members", "member_groups", "member_decisions", "members", "decision_today", "requests", "panoramas", "departments", "cells", "pastors", "events", "contacts", "schools", "ministries", "tours", "churches", "settings", "admins"].map((table) => `DROP TABLE IF EXISTS ${table};`).join("\n")}
 `;
 writeFileSync(new URL("./reset.sql", import.meta.url), reset);
 console.log(

@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { api } from "./api";
 import Admin from "./Admin";
+import MemberPortal from "./Members";
 import { Modal, Notice } from "./Shared";
 import { KioskHome, Churches, Tours, Location, Donation } from "./Kiosk";
 import { mediaUrl } from "./MediaUpload";
@@ -824,6 +825,14 @@ function Agenda({ data }) {
   );
 }
 function PublicApp() {
+  const memberLocation = useLocation();
+  useEffect(() => {
+    if (
+      memberLocation.pathname !== "/membre" &&
+      !memberLocation.pathname.startsWith("/membre/")
+    )
+      sessionStorage.removeItem("vh-member-token");
+  }, [memberLocation.pathname]);
   useEffect(() => {
     sessionStorage.removeItem("vh-token");
   }, []);
@@ -905,6 +914,7 @@ function PublicApp() {
         ) : (
           <Routes>
             <Route index element={<KioskHome data={data} />} />
+            <Route path="membre/*" element={<MemberPortal />} />
             <Route path="nous-localiser" element={<Location data={data} />} />
             <Route path="donner" element={<Donation data={data} />} />
             <Route path="eglises" element={<Churches data={data} />} />
