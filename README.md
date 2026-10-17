@@ -116,3 +116,16 @@ La suppression d’un groupe ou le retrait d’une personne ne supprime pas son 
 Vérification : `npm run test:unit` et `npm run test:membership` dans `api`, puis `npm run lint` et `npm run build` dans `webapp`. Le test d’intégration des membres crée une base temporaire `vase_members_test_*`, teste le parcours complet et la supprime à la fin ; le compte SQL de vérification doit pouvoir créer et supprimer cette base.
 
 La migration `005-member-identification.sql` attribue un identifiant `unique_identification` aux membres existants sans changer leur mot de passe. Un compteur transactionnel et un déclencheur SQL attribuent ensuite un numéro différent à chaque insertion, y compris directe, avec une contrainte UNIQUE. Les codes ont six chiffres (100000–999999) et restent distincts de la clé primaire et de la clé anti-doublon. Le compteur ne doit pas être réinitialisé : il conserve les numéros déjà attribués. Le format permet au maximum 900000 identifiants ; une fois épuisé, la base refuse les nouvelles inscriptions sans réutiliser de numéro.
+
+## Accès direct aux pages et hébergement Plesk
+
+Les URLs de page (`/contacts`, `/admin`, `/membre/connexion`, etc.) doivent renvoyer le document HTML de l’application au premier chargement comme lors d’un rechargement. Les routes `/api` restent réservées à l’API et conservent leurs erreurs JSON. Les ressources inexistantes ne sont pas remplacées par du HTML.
+
+Le serveur `api/server.js` sert désormais les fichiers compilés de `webapp/dist` et prend en charge les liens directs. Pour une mise à jour sur Plesk :
+
+1. Exécuter `npm run build` dans `webapp`, puis publier **tout le contenu de `webapp/dist`, y compris le fichier caché `.htaccess`**. Vite inclut maintenant ce fichier depuis `webapp/public/.htaccess`.
+2. Publier les fichiers de l’API mis à jour, notamment `api/server.js` et `api/services/frontend.js`. Avec Node.js / Passenger sur Plesk, utiliser le dossier du projet comme racine de l’application et `api/server.js` comme fichier de démarrage, puis redémarrer l’application Node.js. Conserver les variables d’environnement et les fichiers téléversés existants.
+3. Le chemin HTML par défaut est `webapp/dist`, à côté de `api`. Si l’hébergement conserve les fichiers compilés ailleurs, définir `WEBAPP_DIST_DIR` avec leur chemin absolu (le dossier contenant `index.html`). Le serveur Apache peut aussi utiliser ce dossier comme racine documentaire ; les requêtes `/api` doivent toujours être transmises à Node.
+4. Vérifier en ouvrant directement `/contacts`, `/admin` et `/membre/connexion`, puis en rechargeant chacune de ces pages. Une URL inconnue sous `/api` doit toujours retourner une erreur JSON 404.
+
+Pour un déploiement Nginx séparé, `docs/nginx.conf` conserve le renvoi des pages vers `index.html` et réserve `/api` au serveur Node. Si le répertoire compilé manque côté Node, le serveur signale explicitement qu’il faut publier `webapp/dist`.

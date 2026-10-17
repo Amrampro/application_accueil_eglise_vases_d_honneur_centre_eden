@@ -4,9 +4,25 @@ import cors from "cors";
 import { pool } from "./config/db.js";
 import router from "./routes/index.js";
 import { mediaDirectory } from "./services/media.js";
+import { serveFrontend } from "./services/frontend.js";
 export const app = express();
 app.disable("x-powered-by");
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "https:"],
+        frameSrc: [
+          "'self'",
+          "https://www.google.com",
+          "https://google.com",
+          "https://maps.google.com",
+        ],
+      },
+    },
+  }),
+);
 app.use(
   cors({
     origin: (process.env.CORS_ORIGIN || "http://localhost:5173").split(","),
@@ -26,6 +42,7 @@ app.use(
   }),
 );
 app.use("/api", router);
+serveFrontend(app);
 app.use((req, res) => res.status(404).json({ message: "Route introuvable." }));
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);

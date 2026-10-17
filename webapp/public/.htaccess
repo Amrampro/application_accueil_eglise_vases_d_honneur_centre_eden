@@ -1,0 +1,15 @@
+# Included in webapp/dist by Vite for Apache/Plesk deployments.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Let the Node application handle API requests, including its JSON 404s.
+  RewriteRule ^api(?:/|$) - [L]
+
+  # Existing files and missing assets are never rewritten to HTML.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !^/(assets|images)(/|$)
+  RewriteCond %{REQUEST_URI} !\.[^/]+$
+  RewriteRule ^ /index.html [L]
+</IfModule>

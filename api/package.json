@@ -11,7 +11,7 @@
     "dev": "node --watch server.js",
     "db:import": "node database/import.js",
     "db:migrate": "node database/migrate.js",
-    "test:unit": "node --test tests/validation.test.js tests/location.test.js tests/media.test.js tests/membership.test.js",
+    "test:unit": "node --test tests/validation.test.js tests/location.test.js tests/media.test.js tests/membership.test.js tests/frontend.test.js",
     "test:membership": "node --test tests/membership.test.js tests/membership.integration.test.js"
   },
   "dependencies": {
